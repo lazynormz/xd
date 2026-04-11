@@ -1,0 +1,8 @@
+[agents]
+max_threads = 4
+max_depth = 1
+
+[mcp_servers.obsidian-docs]
+command = "npx.cmd"
+args = ["-y", "@bitbonsai/mcpvault@latest", "E:\\vaults\\xd"]
+startup_timeout_ms = 30000
