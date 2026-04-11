@@ -1,6 +1,6 @@
-# AGENTS.override.md
+# AGENT.override.md
 
-This file overrides and extends the root `AGENTS.md` for the frontend only.
+This file overrides and extends the root `AGENT.md` for the frontend only.
 
 ## Scope
 Applies to everything inside `frontend/`.
@@ -38,6 +38,19 @@ Relevant topics include:
 - API client patterns
 
 Do not guess when the Obsidian docs define the project pattern.
+
+### Required frontend agent workflow
+For non-trivial frontend tasks, use:
+- `obsidian-researcher` to fetch the latest relevant project guidance and conventions before implementation
+- `frontend-worker` for frontend implementation
+- `reviewer` for correctness, security, and test coverage review
+
+Skip this only for trivial edits such as small renames, comments, or narrowly scoped mechanical changes.
+
+Keep ownership clear across agents:
+- `obsidian-researcher` is read-only
+- `frontend-worker` owns frontend code changes
+- `reviewer` reviews for correctness, security, UI regressions, and missing tests
 
 ---
 

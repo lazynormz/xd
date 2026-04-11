@@ -1,6 +1,6 @@
-# AGENTS.override.md
+# AGENT.override.md
 
-This file overrides and extends the root `AGENTS.md` for the backend only.
+This file overrides and extends the root `AGENT.md` for the backend only.
 
 ## Scope
 Applies to everything inside `backend/`.
@@ -38,6 +38,19 @@ Relevant topics include:
 - naming and folder conventions
 
 Do not invent backend patterns if the Obsidian docs define them.
+
+### Required backend agent workflow
+For non-trivial backend tasks, use:
+- `obsidian-researcher` to fetch the latest relevant project guidance and conventions before implementation
+- `backend-worker` for backend implementation
+- `reviewer` for correctness, security, and test coverage review
+
+Skip this only for trivial edits such as small renames, comments, or narrowly scoped mechanical changes.
+
+Keep ownership clear across agents:
+- `obsidian-researcher` is read-only
+- `backend-worker` owns backend code changes
+- `reviewer` reviews for correctness, security, contract drift, and missing tests
 
 ---
 

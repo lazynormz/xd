@@ -1,4 +1,4 @@
-# AGENTS.md
+# AGENT.md
 
 ## Purpose
 This repository contains a private, authenticated platform for a friend group.
@@ -19,7 +19,7 @@ This repository is divided into:
 - `backend/`
 - `frontend/`
 
-More specific rules for each area are defined in their local `AGENTS.override.md` files.
+More specific rules for each area are defined in their local `AGENT.override.md` files.
 
 ---
 
@@ -98,6 +98,12 @@ These rules apply repo-wide unless more specific local docs strengthen them:
 - Fetch relevant rules from `obsidian-vault` first.
 - Follow existing patterns unless the Obsidian docs define a better or newer pattern.
 - Prefer extending existing flows over creating parallel ones.
+
+### Agent workflow
+- This repository explicitly authorizes sub-agent use for non-trivial coding tasks.
+- Use the area-specific `AGENT.override.md` instructions to determine the required agent roles for backend and frontend work.
+- For trivial edits such as small renames, comments, or narrowly scoped mechanical changes, sub-agents may be skipped when they would add unnecessary overhead.
+- Keep ownership clear when using sub-agents and avoid overlapping write responsibility where practical.
 
 ### Security
 - Never trust user input.

@@ -9,3 +9,6 @@ startup_timeout_ms = 30000
 
 [mcp_servers.obsidian-vault.tools.read_multiple_notes]
 approval_mode = "approve"
+
+[mcp_servers.obsidian-vault.tools.search_notes]
+approval_mode = "approve"
