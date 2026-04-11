@@ -4,7 +4,7 @@ using XD.Api.contracts;
 
 namespace XD.Api.Modules.games;
 
-// [Authorize]
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class GamesController : BaseController

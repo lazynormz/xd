@@ -2,27 +2,27 @@ import { useState, type FormEvent, type ReactElement } from 'react'
 
 import { Button } from '@/components/ui/button'
 import type { AuthSession } from '@/features/auth/services/auth-session-storage'
-import { signInAsync } from '@/features/auth/services/sign-in'
-import type { LoginFormValues } from '@/features/auth/types/login-form-values'
+import { registerAsync } from '@/features/auth/services/register'
+import type { RegisterFormValues } from '@/features/auth/types/register-form-values'
 
-interface LoginFormErrors {
+interface RegisterFormErrors {
   email?: string
   password?: string
 }
 
+interface RegisterFormProps {
+  onRegistered: (session: AuthSession) => void
+}
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-const DEFAULT_VALUES: LoginFormValues = {
+const DEFAULT_VALUES: RegisterFormValues = {
   email: '',
   password: '',
 }
 
-interface LoginFormProps {
-  onSignedIn: (session: AuthSession) => void
-}
-
-function validateLoginValues(values: LoginFormValues): LoginFormErrors {
-  const errors: LoginFormErrors = {}
+function validateRegisterValues(values: RegisterFormValues): RegisterFormErrors {
+  const errors: RegisterFormErrors = {}
 
   if (!values.email.trim()) {
     errors.email = 'Enter your email address.'
@@ -31,22 +31,26 @@ function validateLoginValues(values: LoginFormValues): LoginFormErrors {
   }
 
   if (!values.password) {
-    errors.password = 'Enter your password.'
+    errors.password = 'Enter a password.'
+  } else if (values.password.length < 8) {
+    errors.password = 'Use at least 8 characters.'
   }
 
   return errors
 }
 
-export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
-  const [values, setValues] = useState<LoginFormValues>(DEFAULT_VALUES)
-  const [errors, setErrors] = useState<LoginFormErrors>({})
-  const [submitError, setSubmitError] = useState<string>('')
+export function RegisterForm({
+  onRegistered,
+}: RegisterFormProps): ReactElement {
+  const [values, setValues] = useState<RegisterFormValues>(DEFAULT_VALUES)
+  const [errors, setErrors] = useState<RegisterFormErrors>({})
+  const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
 
-    const nextErrors = validateLoginValues(values)
+    const nextErrors = validateRegisterValues(values)
     setErrors(nextErrors)
     setSubmitError('')
 
@@ -57,7 +61,7 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
     setIsSubmitting(true)
 
     try {
-      const result = await signInAsync(values)
+      const result = await registerAsync(values)
 
       if (!result.success) {
         setSubmitError(result.message)
@@ -65,17 +69,17 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
       }
 
       setValues(DEFAULT_VALUES)
-      onSignedIn(result.session)
+      onRegistered(result.session)
     } catch {
-      setSubmitError('Something went wrong while trying to sign you in.')
+      setSubmitError('Something went wrong while creating your account.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  function updateField<K extends keyof LoginFormValues>(
+  function updateField<K extends keyof RegisterFormValues>(
     key: K,
-    nextValue: LoginFormValues[K],
+    nextValue: RegisterFormValues[K],
   ): void {
     setValues(currentValues => ({
       ...currentValues,
@@ -99,25 +103,25 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
       <div className="space-y-2">
         <label
           className="block text-sm font-medium text-stone-900"
-          htmlFor="email"
+          htmlFor="register-email"
         >
           Email
         </label>
         <input
-          id="email"
+          id="register-email"
           type="email"
-          autoComplete="username"
+          autoComplete="email"
           value={values.email}
           onChange={event => {
             updateField('email', event.target.value)
           }}
           aria-invalid={Boolean(errors.email)}
-          aria-describedby={errors.email ? 'email-error' : undefined}
+          aria-describedby={errors.email ? 'register-email-error' : undefined}
           className="h-12 w-full rounded-xl border border-stone-300 bg-white px-4 text-sm text-stone-950 shadow-sm outline-none transition focus:border-amber-700 focus:ring-4 focus:ring-amber-100"
           placeholder="you@example.com"
         />
         {errors.email ? (
-          <p id="email-error" className="text-sm text-red-700">
+          <p id="register-email-error" className="text-sm text-red-700">
             {errors.email}
           </p>
         ) : null}
@@ -126,28 +130,34 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
       <div className="space-y-2">
         <label
           className="block text-sm font-medium text-stone-900"
-          htmlFor="password"
+          htmlFor="register-password"
         >
           Password
         </label>
         <input
-          id="password"
+          id="register-password"
           type="password"
-          autoComplete="current-password"
+          autoComplete="new-password"
           value={values.password}
           onChange={event => {
             updateField('password', event.target.value)
           }}
           aria-invalid={Boolean(errors.password)}
-          aria-describedby={errors.password ? 'password-error' : undefined}
+          aria-describedby={
+            errors.password ? 'register-password-error' : 'register-password-hint'
+          }
           className="h-12 w-full rounded-xl border border-stone-300 bg-white px-4 text-sm text-stone-950 shadow-sm outline-none transition focus:border-amber-700 focus:ring-4 focus:ring-amber-100"
-          placeholder="Enter your password"
+          placeholder="Create a password"
         />
         {errors.password ? (
-          <p id="password-error" className="text-sm text-red-700">
+          <p id="register-password-error" className="text-sm text-red-700">
             {errors.password}
           </p>
-        ) : null}
+        ) : (
+          <p id="register-password-hint" className="text-sm text-stone-500">
+            Use at least 8 characters.
+          </p>
+        )}
       </div>
 
       {submitError ? (
@@ -166,7 +176,7 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
         disabled={isSubmitting}
         className="h-12 w-full rounded-xl bg-stone-950 px-6 text-sm font-semibold text-white hover:bg-stone-800 disabled:hover:bg-stone-950"
       >
-        {isSubmitting ? 'Signing in...' : 'Log in'}
+        {isSubmitting ? 'Creating account...' : 'Create account'}
       </Button>
     </form>
   )

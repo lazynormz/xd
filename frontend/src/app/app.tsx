@@ -1,17 +1,29 @@
-import { useEffect, type ReactElement } from 'react'
+import { useEffect, useState, type ReactElement } from 'react'
 
+import {
+  clearStoredAuthSession,
+  getStoredAuthSession,
+  type AuthSession,
+} from '@/features/auth/services/auth-session-storage'
 import { LoginPage } from '@/features/auth/pages/login-page'
+import { RegisterPage } from '@/features/auth/pages/register-page'
+import { HomePage } from '@/features/home/pages/home-page'
 
 const LOGIN_PATH = '/'
+const REGISTER_PATH = '/register'
 
 function getCurrentPath(): string {
   return window.location.pathname
 }
 
+function isPublicLoggedOutPath(pathname: string): boolean {
+  return pathname === LOGIN_PATH || pathname === REGISTER_PATH
+}
+
 function redirectToLoginIfNeeded(isAuthenticated: boolean): void {
   const currentPath = getCurrentPath()
 
-  if (isAuthenticated || currentPath === LOGIN_PATH) {
+  if (isAuthenticated || isPublicLoggedOutPath(currentPath)) {
     return
   }
 
@@ -19,7 +31,11 @@ function redirectToLoginIfNeeded(isAuthenticated: boolean): void {
 }
 
 export function App(): ReactElement {
-  const isAuthenticated = false
+  const [pathname, setPathname] = useState(() => getCurrentPath())
+  const [session, setSession] = useState<AuthSession | null>(() =>
+    getStoredAuthSession(),
+  )
+  const isAuthenticated = session !== null
 
   useEffect(() => {
     const originalPushState = window.history.pushState.bind(window.history)
@@ -27,6 +43,7 @@ export function App(): ReactElement {
 
     function syncPath(): void {
       redirectToLoginIfNeeded(isAuthenticated)
+      setPathname(getCurrentPath())
     }
 
     window.history.pushState = function pushState(...args): void {
@@ -49,5 +66,39 @@ export function App(): ReactElement {
     }
   }, [isAuthenticated])
 
-  return <LoginPage />
+  if (!isAuthenticated) {
+    if (pathname === REGISTER_PATH) {
+      return (
+        <RegisterPage
+          onNavigateToLogin={() => {
+            window.history.pushState(null, '', LOGIN_PATH)
+          }}
+          onRegistered={nextSession => {
+            setSession(nextSession)
+          }}
+        />
+      )
+    }
+
+    return (
+      <LoginPage
+        onNavigateToRegister={() => {
+          window.history.pushState(null, '', REGISTER_PATH)
+        }}
+        onSignedIn={nextSession => {
+          setSession(nextSession)
+        }}
+      />
+    )
+  }
+
+  return (
+    <HomePage
+      emailAddress={session.user.email}
+      onLogOut={() => {
+        clearStoredAuthSession()
+        setSession(null)
+      }}
+    />
+  )
 }

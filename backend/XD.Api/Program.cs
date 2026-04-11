@@ -2,17 +2,17 @@ namespace XD.Api;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-
-        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
         builder
             .Configuration
             .SetBasePath(new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory).FullName)
             .AddJsonFile("appsettings.json", false)
-            .AddJsonFile($"appsettings.{environment}.json", false);
+            .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true)
+            .AddUserSecrets<Program>(optional: true)
+            .AddEnvironmentVariables();
 
         builder.Services.AddApi(builder.Configuration);
 
@@ -24,18 +24,20 @@ public class Program
             app.UseSwaggerUI();
         }
 
-        // app.UseCors();
+        app.UseCors(DependencyInjection.FrontendCorsPolicyName);
 
         // app.UseHttpsRedirection();
 
-        // app.UseExceptionHandler();
+        app.UseExceptionHandler();
 
-        // app.UseAuthentication();
+        app.UseAuthentication();
 
-        // app.UseAuthorization();
+        app.UseAuthorization();
 
         app.MapControllers();
 
-        app.Run();
+        await app.InitializeDatabaseAsync();
+
+        await app.RunAsync();
     }
 }

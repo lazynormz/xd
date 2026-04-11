@@ -2,7 +2,7 @@ import {
   storeAuthSession,
   type AuthSession,
 } from '@/features/auth/services/auth-session-storage'
-import type { LoginFormValues } from '@/features/auth/types/login-form-values'
+import type { RegisterFormValues } from '@/features/auth/types/register-form-values'
 
 interface AuthenticationResponseDto {
   accessToken: string
@@ -18,7 +18,7 @@ interface ProblemDetailsResponse {
   title?: string
 }
 
-export interface SignInResult {
+export interface RegisterResult {
   message: string
   session: AuthSession
   success: boolean
@@ -27,11 +27,11 @@ export interface SignInResult {
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:5202'
 
-export async function signInAsync(
-  credentials: LoginFormValues,
-): Promise<SignInResult> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-    body: JSON.stringify(credentials),
+export async function registerAsync(
+  values: RegisterFormValues,
+): Promise<RegisterResult> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+    body: JSON.stringify(values),
     headers: {
       'Content-Type': 'application/json',
     },
@@ -45,7 +45,7 @@ export async function signInAsync(
       message:
         problemDetails?.detail ||
         problemDetails?.title ||
-        'Unable to sign in.',
+        'Unable to register.',
       session: createEmptySession(),
       success: false,
     }
@@ -55,7 +55,7 @@ export async function signInAsync(
 
   if (!payload) {
     return {
-      message: 'The authentication response was empty.',
+      message: 'The registration response was empty.',
       session: createEmptySession(),
       success: false,
     }

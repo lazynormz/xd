@@ -3,4 +3,5 @@
   <Project Path="XD.Application/XD.Application.csproj" />
   <Project Path="XD.Domain/XD.Domain.csproj" />
   <Project Path="XD.Infrastructure/XD.Infrastructure.csproj" />
+  <Project Path="XD.Api.Tests/XD.Api.Tests.csproj" />
 </Solution>
