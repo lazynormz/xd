@@ -6,3 +6,6 @@ max_depth = 1
 command = "npx.cmd"
 args = ["-y", "@bitbonsai/mcpvault@latest", "E:\\vaults\\xd"]
 startup_timeout_ms = 30000
+
+[mcp_servers.obsidian-vault.tools.read_multiple_notes]
+approval_mode = "approve"

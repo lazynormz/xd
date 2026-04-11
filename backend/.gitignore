@@ -281,3 +281,5 @@ Thumbs.db
 /Web/ClientApp/.vscode
 
 .semantic-release/node_modules/**
+
+.dotnet/
