@@ -12,3 +12,6 @@ approval_mode = "approve"
 
 [mcp_servers.obsidian-vault.tools.search_notes]
 approval_mode = "approve"
+
+[mcp_servers.obsidian-vault.tools.list_directory]
+approval_mode = "approve"
