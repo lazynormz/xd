@@ -286,3 +286,5 @@ Thumbs.db
 dotnet-home/
 
 *.db
+*.db-shm
+*.db-wal
