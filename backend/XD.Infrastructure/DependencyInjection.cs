@@ -2,9 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using XD.Application.Auth.Contracts;
+using XD.Application.Games.Contracts;
 using XD.Infrastructure.Auth.Configuration;
 using XD.Infrastructure.Auth.Persistence;
 using XD.Infrastructure.Auth.Services;
+using XD.Infrastructure.Games.Persistence;
 
 namespace XD.Infrastructure;
 
@@ -22,6 +24,7 @@ public static class DependencyInjection
         services.AddSingleton(seedUserOptions);
         services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
         services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
+        services.AddScoped<IGameRepository, GameRepository>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IPasswordHasher, PasswordHasherService>();
         services.AddScoped<IUserRepository, UserRepository>();

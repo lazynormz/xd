@@ -8,6 +8,8 @@ public sealed class User
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
+    public string DisplayName { get; private set; } = string.Empty;
+
     public string Email { get; private set; } = string.Empty;
 
     public Guid Id { get; private set; }
@@ -18,16 +20,19 @@ public sealed class User
 
     public static User Create(
         Guid id,
+        string displayName,
         string email,
         string normalizedEmail,
         DateTimeOffset createdAtUtc)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
         ArgumentException.ThrowIfNullOrWhiteSpace(normalizedEmail);
 
         return new User
         {
             CreatedAtUtc = createdAtUtc,
+            DisplayName = displayName.Trim(),
             Email = email,
             Id = id,
             NormalizedEmail = normalizedEmail
@@ -39,5 +44,12 @@ public sealed class User
         ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
 
         PasswordHash = passwordHash;
+    }
+
+    public void UpdateDisplayName(string displayName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+
+        DisplayName = displayName.Trim();
     }
 }

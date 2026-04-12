@@ -2,6 +2,7 @@ export interface AuthSession {
   accessToken: string
   expiresAtUtc: string
   user: {
+    displayName: string
     email: string
     id: string
   }
@@ -23,8 +24,17 @@ export function getStoredAuthSession(): AuthSession | null {
   try {
     const parsedValue = JSON.parse(rawValue) as AuthSession
     const expiresAt = Date.parse(parsedValue.expiresAtUtc)
+    const hasValidUser =
+      typeof parsedValue.user?.displayName === 'string' &&
+      typeof parsedValue.user?.email === 'string' &&
+      typeof parsedValue.user?.id === 'string'
 
-    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+    if (
+      !Number.isFinite(expiresAt) ||
+      expiresAt <= Date.now() ||
+      typeof parsedValue.accessToken !== 'string' ||
+      !hasValidUser
+    ) {
       clearStoredAuthSession()
       return null
     }

@@ -3,14 +3,21 @@ import { useEffect, useState, type ReactElement } from 'react'
 import {
   clearStoredAuthSession,
   getStoredAuthSession,
+  storeAuthSession,
   type AuthSession,
 } from '@/features/auth/services/auth-session-storage'
+import { AuthenticatedLayout } from '@/app/layouts/authenticated-layout'
 import { LoginPage } from '@/features/auth/pages/login-page'
 import { RegisterPage } from '@/features/auth/pages/register-page'
 import { HomePage } from '@/features/home/pages/home-page'
+import { GamesPage } from '@/features/games/pages/games-page'
+import { SettingsPage } from '@/features/settings/pages/settings-page'
 
 const LOGIN_PATH = '/'
 const REGISTER_PATH = '/register'
+const DASHBOARD_PATH = '/dashboard'
+const GAMES_PATH = '/games'
+const SETTINGS_PATH = '/settings'
 
 function getCurrentPath(): string {
   return window.location.pathname
@@ -20,14 +27,20 @@ function isPublicLoggedOutPath(pathname: string): boolean {
   return pathname === LOGIN_PATH || pathname === REGISTER_PATH
 }
 
-function redirectToLoginIfNeeded(isAuthenticated: boolean): void {
-  const currentPath = getCurrentPath()
+function isAuthenticatedPath(pathname: string): boolean {
+  return (
+    pathname === DASHBOARD_PATH ||
+    pathname === GAMES_PATH ||
+    pathname === SETTINGS_PATH
+  )
+}
 
-  if (isAuthenticated || isPublicLoggedOutPath(currentPath)) {
-    return
-  }
+function normalizePublicPath(pathname: string): string {
+  return isPublicLoggedOutPath(pathname) ? pathname : LOGIN_PATH
+}
 
-  window.history.replaceState(null, '', LOGIN_PATH)
+function normalizeAuthenticatedPath(pathname: string): string {
+  return isAuthenticatedPath(pathname) ? pathname : DASHBOARD_PATH
 }
 
 export function App(): ReactElement {
@@ -42,8 +55,16 @@ export function App(): ReactElement {
     const originalReplaceState = window.history.replaceState.bind(window.history)
 
     function syncPath(): void {
-      redirectToLoginIfNeeded(isAuthenticated)
-      setPathname(getCurrentPath())
+      const currentPath = getCurrentPath()
+      const nextPath = isAuthenticated
+        ? normalizeAuthenticatedPath(currentPath)
+        : normalizePublicPath(currentPath)
+
+      if (nextPath !== currentPath) {
+        originalReplaceState(null, '', nextPath)
+      }
+
+      setPathname(nextPath)
     }
 
     window.history.pushState = function pushState(...args): void {
@@ -67,7 +88,9 @@ export function App(): ReactElement {
   }, [isAuthenticated])
 
   if (!isAuthenticated) {
-    if (pathname === REGISTER_PATH) {
+    const publicPathname = normalizePublicPath(pathname)
+
+    if (publicPathname === REGISTER_PATH) {
       return (
         <RegisterPage
           onNavigateToLogin={() => {
@@ -92,13 +115,42 @@ export function App(): ReactElement {
     )
   }
 
+  const authenticatedPathname = normalizeAuthenticatedPath(pathname)
+
+  function handleSessionChanged(nextSession: AuthSession): void {
+    storeAuthSession(nextSession)
+    setSession(nextSession)
+  }
+
   return (
-    <HomePage
-      emailAddress={session.user.email}
+    <AuthenticatedLayout
+      currentPathname={authenticatedPathname}
+      session={session}
+      onNavigate={nextPathname => {
+        window.history.pushState(null, '', nextPathname)
+      }}
       onLogOut={() => {
         clearStoredAuthSession()
         setSession(null)
       }}
-    />
+    >
+      {authenticatedPathname === GAMES_PATH ? (
+        <GamesPage
+          accessToken={session.accessToken}
+          currentUserId={session.user.id}
+        />
+      ) : authenticatedPathname === SETTINGS_PATH ? (
+        <SettingsPage
+          accessToken={session.accessToken}
+          session={session}
+          onSessionChanged={handleSessionChanged}
+        />
+      ) : (
+        <HomePage
+          displayName={session.user.displayName}
+          emailAddress={session.user.email}
+        />
+      )}
+    </AuthenticatedLayout>
   )
 }

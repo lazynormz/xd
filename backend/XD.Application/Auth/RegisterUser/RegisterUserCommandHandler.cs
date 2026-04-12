@@ -30,8 +30,13 @@ public sealed class RegisterUserCommandHandler(
             return null;
         }
 
+        var displayName = await DisplayNameGenerator.GenerateUniqueAsync(
+            userRepository,
+            cancellationToken);
+
         var user = User.Create(
             Guid.NewGuid(),
+            displayName,
             EmailAddressNormalizer.Sanitize(request.Email),
             normalizedEmail,
             timeProvider.GetUtcNow());

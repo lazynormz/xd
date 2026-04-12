@@ -12,6 +12,17 @@ public sealed class UserRepository(AppDbContext dbContext) : IUserRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<bool> ExistsByDisplayNameAsync(
+        string displayName,
+        Guid? excludedUserId,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.Users.AnyAsync(
+            user => user.DisplayName == displayName &&
+                (!excludedUserId.HasValue || user.Id != excludedUserId.Value),
+            cancellationToken);
+    }
+
     public async Task<bool> ExistsByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
     {
         return await dbContext.Users.AnyAsync(
@@ -29,5 +40,11 @@ public sealed class UserRepository(AppDbContext dbContext) : IUserRepository
         return await dbContext.Users.FirstOrDefaultAsync(
             user => user.NormalizedEmail == normalizedEmail,
             cancellationToken);
+    }
+
+    public async Task UpdateAsync(User user, CancellationToken cancellationToken)
+    {
+        dbContext.Users.Update(user);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

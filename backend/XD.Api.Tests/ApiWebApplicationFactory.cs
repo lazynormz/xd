@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using XD.Api;
+using XD.Infrastructure.Auth.Persistence;
 
 namespace XD.Api.Tests;
 
@@ -36,6 +39,17 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 new KeyValuePair<string, string?>("SeedUser:Password", "Password123!")
             ]);
         });
+    }
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+
+        using var scope = host.Services.CreateScope();
+        var databaseInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
+        databaseInitializer.InitializeAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+        return host;
     }
 
     protected override void Dispose(bool disposing)

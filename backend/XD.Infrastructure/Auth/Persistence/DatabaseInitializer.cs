@@ -17,6 +17,7 @@ public sealed class DatabaseInitializer(
     IPasswordHasher passwordHasher,
     SeedUserOptions seedUserOptions,
     TimeProvider timeProvider,
+    IUserRepository userRepository,
     ILogger<DatabaseInitializer> logger)
     : IDatabaseInitializer
 {
@@ -39,8 +40,13 @@ public sealed class DatabaseInitializer(
             return;
         }
 
+        var displayName = await DisplayNameGenerator.GenerateUniqueAsync(
+            userRepository,
+            cancellationToken);
+
         var user = User.Create(
             Guid.NewGuid(),
+            displayName,
             EmailAddressNormalizer.Sanitize(seedUserOptions.Email!),
             normalizedEmail,
             timeProvider.GetUtcNow());

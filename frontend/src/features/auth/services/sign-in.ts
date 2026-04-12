@@ -8,6 +8,7 @@ interface AuthenticationResponseDto {
   accessToken: string
   expiresAtUtc: string
   user: {
+    displayName: string
     email: string
     id: string
   }
@@ -65,6 +66,7 @@ export async function signInAsync(
     accessToken: payload.accessToken,
     expiresAtUtc: payload.expiresAtUtc,
     user: {
+      displayName: payload.user.displayName,
       email: payload.user.email,
       id: payload.user.id,
     },
@@ -92,6 +94,7 @@ function createEmptySession(): AuthSession {
     accessToken: '',
     expiresAtUtc: '',
     user: {
+      displayName: '',
       email: '',
       id: '',
     },

@@ -130,7 +130,16 @@ body {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+  }
+  *::selection {
+    background: oklch(0.42 0.09 232 / 0.45);
+    color: oklch(0.98 0.004 255);
+  }
+  input::selection,
+  textarea::selection {
+    background: oklch(0.48 0.11 210 / 0.38);
+    color: oklch(0.98 0.004 255);
   }
   body {
     @apply bg-background text-foreground antialiased;
