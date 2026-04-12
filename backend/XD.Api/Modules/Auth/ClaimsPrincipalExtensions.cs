@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace XD.Api.Auth;
+namespace XD.Api.Modules.Auth;
 
 public static class ClaimsPrincipalExtensions
 {

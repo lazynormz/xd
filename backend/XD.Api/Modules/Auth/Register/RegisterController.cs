@@ -2,33 +2,33 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XD.Api.contracts;
 using XD.Application.Auth.Dtos;
-using XD.Application.Auth.LoginUser;
+using XD.Application.Auth.RegisterUser;
 
-namespace XD.Api.Auth.Login;
+namespace XD.Api.Modules.Auth.Register;
 
 [AllowAnonymous]
-[Route("api/auth/login")]
-public sealed class LoginController : BaseController
+[Route("api/auth/register")]
+public sealed class RegisterController : BaseController
 {
     [HttpPost]
     [ProducesResponseType<AuthenticationResponseDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AuthenticationResponseDto>> PostAsync(
-        [FromBody] LoginRequest request,
+        [FromBody] RegisterRequest request,
         CancellationToken cancellationToken)
     {
         var response = await Mediator.Send(
-            new LoginUserCommand(request.Email, request.Password),
+            new RegisterUserCommand(request.Email, request.Password),
             cancellationToken);
 
         if (response is null)
         {
-            return Unauthorized(new ProblemDetails
+            return Conflict(new ProblemDetails
             {
-                Detail = "The email address or password is incorrect.",
-                Status = StatusCodes.Status401Unauthorized,
-                Title = "Invalid credentials."
+                Detail = "An account with that email address already exists.",
+                Status = StatusCodes.Status409Conflict,
+                Title = "Email already registered."
             });
         }
 

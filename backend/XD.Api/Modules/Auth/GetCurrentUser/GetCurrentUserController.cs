@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using XD.Api.Auth;
 using XD.Api.contracts;
 using XD.Application.Auth.Dtos;
 using XD.Application.Auth.GetCurrentUser;
 
-namespace XD.Api.Auth.GetCurrentUser;
+namespace XD.Api.Modules.Auth.GetCurrentUser;
 
 [Route("api/auth/me")]
 public sealed class GetCurrentUserController : BaseController
