@@ -18,11 +18,11 @@ public sealed class RegisterController : BaseController
         [FromBody] RegisterRequest request,
         CancellationToken cancellationToken)
     {
-        var response = await Mediator.Send(
-            new RegisterUserCommand(request.Email, request.Password),
+        var result = await Mediator.Send(
+            new RegisterUserCommand(request.Email, request.Password, request.Username),
             cancellationToken);
 
-        if (response is null)
+        if (result.EmailAlreadyExists)
         {
             return Conflict(new ProblemDetails
             {
@@ -32,6 +32,16 @@ public sealed class RegisterController : BaseController
             });
         }
 
-        return Ok(response);
+        if (result.DisplayNameAlreadyExists)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Detail = "That display name is already in use.",
+                Status = StatusCodes.Status409Conflict,
+                Title = "Display name unavailable."
+            });
+        }
+
+        return Ok(result.Authentication!);
     }
 }

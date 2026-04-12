@@ -3,6 +3,12 @@ import {
   type AuthSession,
 } from '@/features/auth/services/auth-session-storage'
 import type { RegisterFormValues } from '@/features/auth/types/register-form-values'
+import {
+  getProblemDetailsMessage,
+  readJsonSafely,
+  sendApiRequestAsync,
+  type ProblemDetailsResponse,
+} from '@/lib/api/api-client'
 
 interface AuthenticationResponseDto {
   accessToken: string
@@ -14,28 +20,17 @@ interface AuthenticationResponseDto {
   }
 }
 
-interface ProblemDetailsResponse {
-  detail?: string
-  title?: string
-}
-
 export interface RegisterResult {
   message: string
   session: AuthSession
   success: boolean
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL?.trim() || 'http://localhost:5202'
-
 export async function registerAsync(
   values: RegisterFormValues,
 ): Promise<RegisterResult> {
-  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+  const response = await sendApiRequestAsync('/api/auth/register', {
     body: JSON.stringify(values),
-    headers: {
-      'Content-Type': 'application/json',
-    },
     method: 'POST',
   })
 
@@ -43,10 +38,7 @@ export async function registerAsync(
     const problemDetails = await readJsonSafely<ProblemDetailsResponse>(response)
 
     return {
-      message:
-        problemDetails?.detail ||
-        problemDetails?.title ||
-        'Unable to register.',
+      message: getProblemDetailsMessage(problemDetails, 'Unable to register.'),
       session: createEmptySession(),
       success: false,
     }
@@ -78,14 +70,6 @@ export async function registerAsync(
     message: '',
     session,
     success: true,
-  }
-}
-
-async function readJsonSafely<T>(response: Response): Promise<T | null> {
-  try {
-    return (await response.json()) as T
-  } catch {
-    return null
   }
 }
 

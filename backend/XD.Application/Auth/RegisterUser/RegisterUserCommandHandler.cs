@@ -1,7 +1,6 @@
 using FluentValidation;
 using Mediator;
 using XD.Application.Auth.Contracts;
-using XD.Application.Auth.Dtos;
 using XD.Domain.Auth;
 
 namespace XD.Application.Auth.RegisterUser;
@@ -12,14 +11,15 @@ public sealed class RegisterUserCommandHandler(
     IUserRepository userRepository,
     TimeProvider timeProvider,
     IValidator<RegisterUserCommand> validator)
-    : IRequestHandler<RegisterUserCommand, AuthenticationResponseDto?>
+    : IRequestHandler<RegisterUserCommand, RegisterUserResult>
 {
-    public async ValueTask<AuthenticationResponseDto?> Handle(
+    public async ValueTask<RegisterUserResult> Handle(
         RegisterUserCommand request,
         CancellationToken cancellationToken)
     {
         await validator.ValidateAndThrowAsync(request, cancellationToken);
 
+        var displayName = request.Username.Trim();
         var normalizedEmail = EmailAddressNormalizer.Normalize(request.Email);
         var emailAlreadyExists = await userRepository.ExistsByNormalizedEmailAsync(
             normalizedEmail,
@@ -27,12 +27,18 @@ public sealed class RegisterUserCommandHandler(
 
         if (emailAlreadyExists)
         {
-            return null;
+            return RegisterUserResult.CreateEmailAlreadyExists();
         }
 
-        var displayName = await DisplayNameGenerator.GenerateUniqueAsync(
-            userRepository,
+        var displayNameAlreadyExists = await userRepository.ExistsByDisplayNameAsync(
+            displayName,
+            null,
             cancellationToken);
+
+        if (displayNameAlreadyExists)
+        {
+            return RegisterUserResult.CreateDisplayNameAlreadyExists();
+        }
 
         var user = User.Create(
             Guid.NewGuid(),
@@ -45,6 +51,6 @@ public sealed class RegisterUserCommandHandler(
 
         await userRepository.AddAsync(user, cancellationToken);
 
-        return jwtTokenGenerator.GenerateToken(user);
+        return RegisterUserResult.CreateSuccess(jwtTokenGenerator.GenerateToken(user));
     }
 }

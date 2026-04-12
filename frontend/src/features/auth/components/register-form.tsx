@@ -8,6 +8,7 @@ import type { RegisterFormValues } from '@/features/auth/types/register-form-val
 interface RegisterFormErrors {
   email?: string
   password?: string
+  username?: string
 }
 
 interface RegisterFormProps {
@@ -19,13 +20,26 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const DEFAULT_VALUES: RegisterFormValues = {
   email: '',
   password: '',
+  username: '',
 }
+
+const USERNAME_ERROR_MESSAGE =
+  'Use 1 to 64 characters with letters, numbers, hyphens, or underscores.'
 
 const INPUT_CLASS_NAME =
   'h-12 w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 text-sm text-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition placeholder:text-slate-500 focus:border-amber-300/60 focus:ring-4 focus:ring-amber-300/15'
 
 function validateRegisterValues(values: RegisterFormValues): RegisterFormErrors {
   const errors: RegisterFormErrors = {}
+  const normalizedUsername = values.username.trim()
+
+  if (!normalizedUsername) {
+    errors.username = 'Enter a username.'
+  } else if (normalizedUsername.length > 64) {
+    errors.username = USERNAME_ERROR_MESSAGE
+  } else if (!/^[a-zA-Z0-9_-]+$/.test(normalizedUsername)) {
+    errors.username = USERNAME_ERROR_MESSAGE
+  }
 
   if (!values.email.trim()) {
     errors.email = 'Enter your email address.'
@@ -64,7 +78,10 @@ export function RegisterForm({
     setIsSubmitting(true)
 
     try {
-      const result = await registerAsync(values)
+      const result = await registerAsync({
+        ...values,
+        username: values.username.trim(),
+      })
 
       if (!result.success) {
         setSubmitError(result.message)
@@ -103,6 +120,38 @@ export function RegisterForm({
         void handleSubmit(event)
       }}
     >
+      <div className="space-y-2">
+        <label
+          className="block text-sm font-medium text-slate-200"
+          htmlFor="register-username"
+        >
+          Username
+        </label>
+        <input
+          id="register-username"
+          autoComplete="nickname"
+          value={values.username}
+          onChange={event => {
+            updateField('username', event.target.value)
+          }}
+          aria-invalid={Boolean(errors.username)}
+          aria-describedby={
+            errors.username ? 'register-username-error' : 'register-username-hint'
+          }
+          className={INPUT_CLASS_NAME}
+          placeholder="captain_coop"
+        />
+        {errors.username ? (
+          <p id="register-username-error" className="text-sm text-red-300">
+            {errors.username}
+          </p>
+        ) : (
+          <p id="register-username-hint" className="text-sm text-slate-400">
+            {USERNAME_ERROR_MESSAGE}
+          </p>
+        )}
+      </div>
+
       <div className="space-y-2">
         <label
           className="block text-sm font-medium text-slate-200"

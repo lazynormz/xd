@@ -13,7 +13,8 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
     public async Task LoginAsync_ReturnsJwtForRegisteredUser()
     {
         var emailAddress = CreateUniqueEmailAddress();
-        await RegisterAsync(emailAddress, "Password123!");
+        var displayName = CreateUniqueDisplayName();
+        await RegisterAsync(emailAddress, "Password123!", displayName);
 
         var response = await _httpClient.PostAsJsonAsync(
             "/api/auth/login",
@@ -27,14 +28,14 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
         Assert.False(string.IsNullOrWhiteSpace(authentication.AccessToken));
         Assert.Equal("Bearer", authentication.TokenType);
         Assert.Equal(emailAddress, authentication.User.Email);
-        AssertGeneratedDisplayName(authentication.User.DisplayName);
+        Assert.Equal(displayName, authentication.User.DisplayName);
     }
 
     [Fact]
     public async Task LoginAsync_ReturnsUnauthorizedForInvalidCredentials()
     {
         var emailAddress = CreateUniqueEmailAddress();
-        await RegisterAsync(emailAddress, "Password123!");
+        await RegisterAsync(emailAddress, "Password123!", CreateUniqueDisplayName());
 
         var response = await _httpClient.PostAsJsonAsync(
             "/api/auth/login",
@@ -47,7 +48,8 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
     public async Task GetCurrentUserAsync_ReturnsCurrentUserForValidBearerToken()
     {
         var emailAddress = CreateUniqueEmailAddress();
-        var authentication = await RegisterAsync(emailAddress, "Password123!");
+        var displayName = CreateUniqueDisplayName();
+        var authentication = await RegisterAsync(emailAddress, "Password123!", displayName);
         var request = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authentication.AccessToken);
@@ -60,24 +62,41 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
 
         Assert.NotNull(currentUser);
         Assert.Equal(emailAddress, currentUser.Email);
-        AssertGeneratedDisplayName(currentUser.DisplayName);
+        Assert.Equal(displayName, currentUser.DisplayName);
     }
 
     [Fact]
-    public async Task RegisterAsync_AssignsUniqueDisplayNamesToNewUsers()
+    public async Task RegisterAsync_StoresProvidedDisplayName()
     {
-        var firstUser = await RegisterAsync(CreateUniqueEmailAddress(), "Password123!");
-        var secondUser = await RegisterAsync(CreateUniqueEmailAddress(), "Password123!");
+        var displayName = CreateUniqueDisplayName();
+        var authentication = await RegisterAsync(
+            CreateUniqueEmailAddress(),
+            "Password123!",
+            displayName);
 
-        AssertGeneratedDisplayName(firstUser.User.DisplayName);
-        AssertGeneratedDisplayName(secondUser.User.DisplayName);
-        Assert.NotEqual(firstUser.User.DisplayName, secondUser.User.DisplayName);
+        Assert.Equal(displayName, authentication.User.DisplayName);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_ReturnsConflictForExistingDisplayName()
+    {
+        var displayName = CreateUniqueDisplayName();
+        await RegisterAsync(CreateUniqueEmailAddress(), "Password123!", displayName);
+
+        var response = await _httpClient.PostAsJsonAsync(
+            "/api/auth/register",
+            new RegisterRequest(CreateUniqueEmailAddress(), "Password123!", displayName));
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
     [Fact]
     public async Task UpdateCurrentUserAsync_UpdatesDisplayNameForAuthenticatedUser()
     {
-        var authentication = await RegisterAsync(CreateUniqueEmailAddress(), "Password123!");
+        var authentication = await RegisterAsync(
+            CreateUniqueEmailAddress(),
+            "Password123!",
+            CreateUniqueDisplayName());
         var displayName = $"captain_{Guid.NewGuid():N}";
         var request = CreateAuthorizedRequest(HttpMethod.Put, "/api/auth/me", authentication.AccessToken);
         request.Content = JsonContent.Create(new UpdateCurrentUserRequest(displayName));
@@ -99,8 +118,14 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
     [Fact]
     public async Task UpdateCurrentUserAsync_ReturnsConflictForExistingDisplayName()
     {
-        var firstUser = await RegisterAsync(CreateUniqueEmailAddress(), "Password123!");
-        var secondUser = await RegisterAsync(CreateUniqueEmailAddress(), "Password123!");
+        var firstUser = await RegisterAsync(
+            CreateUniqueEmailAddress(),
+            "Password123!",
+            CreateUniqueDisplayName());
+        var secondUser = await RegisterAsync(
+            CreateUniqueEmailAddress(),
+            "Password123!",
+            CreateUniqueDisplayName());
         var request = CreateAuthorizedRequest(HttpMethod.Put, "/api/auth/me", secondUser.AccessToken);
         request.Content = JsonContent.Create(new UpdateCurrentUserRequest(firstUser.User.DisplayName));
 
@@ -112,7 +137,10 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
     [Fact]
     public async Task UpdateCurrentUserAsync_ReturnsBadRequestForInvalidDisplayName()
     {
-        var authentication = await RegisterAsync(CreateUniqueEmailAddress(), "Password123!");
+        var authentication = await RegisterAsync(
+            CreateUniqueEmailAddress(),
+            "Password123!",
+            CreateUniqueDisplayName());
         var request = CreateAuthorizedRequest(HttpMethod.Put, "/api/auth/me", authentication.AccessToken);
         request.Content = JsonContent.Create(new UpdateCurrentUserRequest("display name with spaces"));
 
@@ -126,8 +154,14 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
     {
         var firstUserEmailAddress = CreateUniqueEmailAddress();
         var secondUserEmailAddress = CreateUniqueEmailAddress();
-        var firstUserAuthentication = await RegisterAsync(firstUserEmailAddress, "Password123!");
-        var secondUserAuthentication = await RegisterAsync(secondUserEmailAddress, "Password123!");
+        var firstUserAuthentication = await RegisterAsync(
+            firstUserEmailAddress,
+            "Password123!",
+            CreateUniqueDisplayName());
+        var secondUserAuthentication = await RegisterAsync(
+            secondUserEmailAddress,
+            "Password123!",
+            CreateUniqueDisplayName());
 
         var createdGame = await CreateGameAsync(
             firstUserAuthentication.AccessToken,
@@ -141,7 +175,7 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
         Assert.True(createdGame.CurrentUserWantsToPlay);
         Assert.Single(createdGame.InterestedUsers);
         Assert.Equal(firstUserEmailAddress, createdGame.InterestedUsers[0].Email);
-        AssertGeneratedDisplayName(createdGame.InterestedUsers[0].DisplayName);
+        Assert.False(string.IsNullOrWhiteSpace(createdGame.InterestedUsers[0].DisplayName));
 
         var joinedGame = await JoinGameAsync(secondUserAuthentication.AccessToken, createdGame.Id);
 
@@ -169,7 +203,10 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
     [Fact]
     public async Task CreateGameAsync_ReturnsBadRequestForInvalidPayload()
     {
-        var authentication = await RegisterAsync(CreateUniqueEmailAddress(), "Password123!");
+        var authentication = await RegisterAsync(
+            CreateUniqueEmailAddress(),
+            "Password123!",
+            CreateUniqueDisplayName());
         var request = CreateAuthorizedRequest(
             HttpMethod.Post,
             "/api/games",
@@ -185,7 +222,7 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
     private async Task<AuthenticationResponse> LoginAsync()
     {
         var emailAddress = CreateUniqueEmailAddress();
-        await RegisterAsync(emailAddress, "Password123!");
+        await RegisterAsync(emailAddress, "Password123!", CreateUniqueDisplayName());
 
         var response = await _httpClient.PostAsJsonAsync(
             "/api/auth/login",
@@ -196,11 +233,14 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
         return (await response.Content.ReadFromJsonAsync<AuthenticationResponse>())!;
     }
 
-    private async Task<AuthenticationResponse> RegisterAsync(string email, string password)
+    private async Task<AuthenticationResponse> RegisterAsync(
+        string email,
+        string password,
+        string username)
     {
         var response = await _httpClient.PostAsJsonAsync(
             "/api/auth/register",
-            new LoginRequest(email, password));
+            new RegisterRequest(email, password, username));
 
         response.EnsureSuccessStatusCode();
 
@@ -264,13 +304,14 @@ public sealed class AuthenticationTests(ApiWebApplicationFactory factory)
         return $"friend-{Guid.NewGuid():N}@example.com";
     }
 
-    private static void AssertGeneratedDisplayName(string displayName)
+    private static string CreateUniqueDisplayName()
     {
-        Assert.False(string.IsNullOrWhiteSpace(displayName));
-        Assert.StartsWith("username", displayName, StringComparison.Ordinal);
+        return $"friend_{Guid.NewGuid():N}";
     }
 
     private sealed record LoginRequest(string Email, string Password);
+
+    private sealed record RegisterRequest(string Email, string Password, string Username);
 
     private sealed record AuthenticationResponse(
         string AccessToken,
