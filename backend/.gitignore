@@ -284,3 +284,5 @@ Thumbs.db
 
 .dotnet/
 dotnet-home/
+
+*.db
