@@ -21,6 +21,9 @@ interface LoginFormProps {
   onSignedIn: (session: AuthSession) => void
 }
 
+const INPUT_CLASS_NAME =
+  'h-12 w-full rounded-xl border border-white/10 bg-slate-950/80 px-4 text-sm text-slate-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition placeholder:text-slate-500 focus:border-amber-300/60 focus:ring-4 focus:ring-amber-300/15'
+
 function validateLoginValues(values: LoginFormValues): LoginFormErrors {
   const errors: LoginFormErrors = {}
 
@@ -98,7 +101,7 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
     >
       <div className="space-y-2">
         <label
-          className="block text-sm font-medium text-stone-900"
+          className="block text-sm font-medium text-slate-200"
           htmlFor="email"
         >
           Email
@@ -113,11 +116,11 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
           }}
           aria-invalid={Boolean(errors.email)}
           aria-describedby={errors.email ? 'email-error' : undefined}
-          className="h-12 w-full rounded-xl border border-stone-300 bg-white px-4 text-sm text-stone-950 shadow-sm outline-none transition focus:border-amber-700 focus:ring-4 focus:ring-amber-100"
+          className={INPUT_CLASS_NAME}
           placeholder="you@example.com"
         />
         {errors.email ? (
-          <p id="email-error" className="text-sm text-red-700">
+          <p id="email-error" className="text-sm text-red-300">
             {errors.email}
           </p>
         ) : null}
@@ -125,7 +128,7 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
 
       <div className="space-y-2">
         <label
-          className="block text-sm font-medium text-stone-900"
+          className="block text-sm font-medium text-slate-200"
           htmlFor="password"
         >
           Password
@@ -140,11 +143,11 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
           }}
           aria-invalid={Boolean(errors.password)}
           aria-describedby={errors.password ? 'password-error' : undefined}
-          className="h-12 w-full rounded-xl border border-stone-300 bg-white px-4 text-sm text-stone-950 shadow-sm outline-none transition focus:border-amber-700 focus:ring-4 focus:ring-amber-100"
+          className={INPUT_CLASS_NAME}
           placeholder="Enter your password"
         />
         {errors.password ? (
-          <p id="password-error" className="text-sm text-red-700">
+          <p id="password-error" className="text-sm text-red-300">
             {errors.password}
           </p>
         ) : null}
@@ -154,7 +157,7 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
         <p
           role="alert"
           aria-live="polite"
-          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          className="rounded-xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-100"
         >
           {submitError}
         </p>
@@ -164,7 +167,7 @@ export function LoginForm({ onSignedIn }: LoginFormProps): ReactElement {
         type="submit"
         size="lg"
         disabled={isSubmitting}
-        className="h-12 w-full rounded-xl bg-stone-950 px-6 text-sm font-semibold text-white hover:bg-stone-800 disabled:hover:bg-stone-950"
+        className="h-12 w-full rounded-xl bg-amber-300 px-6 text-sm font-semibold text-slate-950 hover:bg-amber-200 disabled:bg-amber-300/60 disabled:text-slate-950/80 disabled:hover:bg-amber-300/60"
       >
         {isSubmitting ? 'Signing in...' : 'Log in'}
       </Button>
