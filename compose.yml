@@ -10,7 +10,7 @@ services:
       Cors__AllowedOrigins__0: http://localhost:4173
       Jwt__SigningKey: change-this-production-signing-key-32-chars-min
     ports:
-      - "5202:8080"
+      - "5202:9555"
     volumes:
       - backend_data:/data
     restart: unless-stopped
