@@ -7,7 +7,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Data Source=/data/xd.db
-      Cors__AllowedOrigins__0: http://localhost:4173
+      Cors__AllowedOrigins__0: https://xd.ml-winum.dk
       Jwt__SigningKey: change-this-production-signing-key-32-chars-min
     ports:
       - "5202:9555"
@@ -20,7 +20,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: http://localhost:5202
+        VITE_API_BASE_URL: https://xd-api.ml-winum.dk
     depends_on:
       - backend
     ports:

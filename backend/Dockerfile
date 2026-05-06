@@ -21,7 +21,8 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_URLS=http://+:8080 \
     ConnectionStrings__DefaultConnection="Data Source=/data/xd.db" \
     Cors__AllowedOrigins__0=http://localhost:4173 \
-    Cors__AllowedOrigins__1=http://localhost:5173
+    Cors__AllowedOrigins__1=http://localhost:5173 \
+    Cors__AllowedOrigins__2=https://xd.ml-winum.dk
 
 RUN mkdir /data
 
